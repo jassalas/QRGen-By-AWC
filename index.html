@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>QR Generator – Class Based Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        textarea,
+        input,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+        }
+
+        .controls {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .qr-row {
+            background: #fff;
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .qr-box {
+            width: 260px;
+            height: 260px;
+            margin-bottom: 10px;
+        }
+
+        .qr-variant {
+            border: 3px solid transparent;
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .qr-variant.selected {
+            border-color: #007bff;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">QR Generator – Class Based Pro</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Controls</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="prefix" class="form-label">Prefix</label>
+                            <input id="prefix" class="form-control" value="https://domain.extension/">
+                        </div>
+                        <div class="mb-3">
+                            <label for="qr-input" class="form-label">QR Input (one value per line)</label>
+                            <textarea id="qr-input" class="form-control" placeholder="One value per line"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="captions" class="form-label">Captions (one per QR, optional)</label>
+                            <textarea id="captions" class="form-control" placeholder="One caption per line"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="suffix" class="form-label">Suffix</label>
+                            <input id="suffix" class="form-control" value=".pdf">
+                        </div>
+                        <div class="mb-3">
+                            <label for="dotRadius" class="form-label">Dot roundness</label>
+                            <input type="range" id="dotRadius" class="form-range" min="0" max="1" step="0.05" value="0.6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cornerRadius" class="form-label">Corner roundness</label>
+                            <input type="range" id="cornerRadius" class="form-range" min="0" max="1" step="0.05" value="0.6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="qrColor" class="form-label">QR color</label>
+                            <input type="color" id="qrColor" class="form-control form-control-color" value="#000000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bgColor" class="form-label">Background color</label>
+                            <input type="color" id="bgColor" class="form-control form-control-color" value="#ffffff">
+                        </div>
+                        <div class="mb-3">
+                            <label for="logoInput" class="form-label">Logo Image</label>
+                            <input type="file" id="logoInput" class="form-control" accept="image/*">
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button id="generateBtn" class="btn btn-primary">Generate</button>
+                            <button id="applyAllBtn" class="btn btn-secondary">Apply Selected Style To All</button>
+                            <button id="downloadAllBtn" class="btn btn-success">Bulk Download SVG (ZIP)</button>
+                            <button id="extractColorBtn" class="btn btn-outline-secondary">Set QR Color from Logo</button>
+                            <button id="tintLogoBtn" class="btn btn-outline-secondary">Tint Logo with QR Color</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Live Preview</div>
+                    <div class="card-body text-center">
+                        <div id="live-preview" class="qr-box d-inline-block"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="output" class="mt-4 row">
+        </div>
+    </div>
+
+    <script>
+        function roundedModulePath(x, y, size, radius, n) {
+            const r = radius;
+            return `
+    M ${x + r} ${y}
+    H ${x + size - r}
+    ${!n.up && !n.right ? `Q ${x + size} ${y} ${x + size} ${y + r}` : `L ${x + size} ${y}`}
+    V ${y + size - r}
+    ${!n.right && !n.down ? `Q ${x + size} ${y + size} ${x + size - r} ${y + size}` : `L ${x + size} ${y + size}`}
+    H ${x + r}
+    ${!n.down && !n.left ? `Q ${x} ${y + size} ${x} ${y + size - r}` : `L ${x} ${y + size}`}
+    V ${y + r}
+    ${!n.left && !n.up ? `Q ${x} ${y} ${x + r} ${y}` : `L ${x} ${y}`}
+    Z
+  `;
+        }
+
+        (() => {
+            "use strict";
+
+            class QRGeneratorApp {
+                constructor() {
+                    this.logo = null;
+                    this.currentLogo = this.logo;
+                    this.displayLogo = this.logo;
+                    this.tintLogo = false;
+                    this.selectedStyle = null;
+                    this.qrItems = [];
+
+                    this.bindDOM();
+                    this.bindEvents();
+                    this.updateLivePreview();
+                }
+
+                $(id) {
+                    const el = document.getElementById(id);
+                    if (!el) throw new Error(`Missing element: ${id}`);
+                    return el;
+                }
+
+                bindDOM() {
+                    this.prefix = this.$("prefix");
+                    this.qrInput = this.$("qr-input");
+                    this.captions = this.$("captions");
+                    this.suffix = this.$("suffix");
+                    this.dotRadius = this.$("dotRadius");
+                    this.cornerRadius = this.$("cornerRadius");
+                    this.qrColor = this.$("qrColor");
+                    this.bgColor = this.$("bgColor");
+                    this.generateBtn = this.$("generateBtn");
+                    this.applyAllBtn = this.$("applyAllBtn");
+                    this.downloadAllBtn = this.$("downloadAllBtn");
+                    this.extractColorBtn = this.$("extractColorBtn");
+                    this.tintLogoBtn = this.$("tintLogoBtn");
+                    this.output = this.$("output");
+                    this.livePreview = this.$("live-preview");
+                    this.logoInput = this.$("logoInput");
+                }
+
+                bindEvents() {
+                    this.generateBtn.addEventListener("click", () => this.generate());
+                    this.applyAllBtn.addEventListener("click", () => this.applyToAll());
+                    this.downloadAllBtn.addEventListener("click", () => this.downloadAll());
+                    this.extractColorBtn.addEventListener("click", () => this.extractColorFromLogo());
+                    this.tintLogoBtn.addEventListener("click", () => {
+                        this.tintLogo = !this.tintLogo;
+                        this.tintLogoBtn.classList.toggle("active", this.tintLogo);
+                        if (this.tintLogo && this.currentLogo) {
+                            this.tintImage(this.currentLogo, this.qrColor.value).then(tinted => {
+                                this.displayLogo = tinted;
+                                this.updateLivePreview();
+                            });
+                        } else {
+                            this.displayLogo = this.currentLogo;
+                            this.updateLivePreview();
+                        }
+                    });
+                    this.dotRadius.addEventListener("input", () => this.updateLivePreview());
+                    this.cornerRadius.addEventListener("input", () => this.updateLivePreview());
+                    this.qrColor.addEventListener("input", () => {
+                        if (this.tintLogo && this.currentLogo) {
+                            this.tintImage(this.currentLogo, this.qrColor.value).then(tinted => {
+                                this.displayLogo = tinted;
+                                this.updateLivePreview();
+                            });
+                        } else {
+                            this.updateLivePreview();
+                        }
+                    });
+                    this.bgColor.addEventListener("input", () => this.updateLivePreview());
+                    this.qrInput.addEventListener("input", () => this.updateLivePreview());
+                    this.captions.addEventListener("input", () => this.updateLivePreview());
+                    this.prefix.addEventListener("input", () => this.updateLivePreview());
+                    this.suffix.addEventListener("input", () => this.updateLivePreview());
+                    this.logoInput.addEventListener("change", (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.currentLogo = e.target.result;
+                                this.displayLogo = this.currentLogo;
+                                this.updateLivePreview();
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            this.currentLogo = null;
+                            this.displayLogo = this.currentLogo;
+                            this.updateLivePreview();
+                        }
+                    });
+                }
+                mapDotStyle(v) {
+                    // Brand-tuned: soft, premium, not playful
+                    if (v < 0.15) return "square";
+                    if (v < 0.35) return "dots";
+                    if (v < 0.65) return "rounded";
+                    return "classy-rounded"; // NEVER extra-rounded
+                }
+
+                mapCornerStyle(v) {
+                    // Eyes must remain readable
+                    if (v < 0.4) return "square";
+                    return "rounded"; // lock here
+                }
+                getSafeStyle() {
+                    const rawDot = parseFloat(this.dotRadius.value);
+                    const rawCorner = parseFloat(this.cornerRadius.value);
+
+                    return {
+                        dot: Math.min(rawDot, 0.7),       // hard clamp
+                        corner: Math.min(rawCorner, 0.6), // hard clamp
+                        dark: this.qrColor.value,
+                        light: this.bgColor.value
+                    };
+                }
+
+                getStyle() {
+                    return {
+                        dot: parseFloat(this.dotRadius.value),
+                        corner: parseFloat(this.cornerRadius.value),
+                        dark: this.qrColor.value,
+                        light: this.bgColor.value
+                    };
+                }
+
+                updateLivePreview() {
+                    this.livePreview.innerHTML = "";
+                    const lines = this.qrInput.value.trim().split("\n").filter(Boolean);
+                    const data = lines.length ? this.prefix.value + lines[0] + this.suffix.value : "Preview";
+                    const style = this.getStyle();
+                    this.createQR(this.livePreview, data, style);
+                    // For live preview, show data below
+                    const dataDiv = document.createElement("div");
+                    dataDiv.className = "mt-2 small text-muted";
+                    dataDiv.textContent = data;
+                    this.livePreview.appendChild(dataDiv);
+                }
+
+                extractColorFromLogo() {
+                    if (!this.currentLogo) {
+                        alert("Please select a custom logo first");
+                        return;
+                    }
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        const colorCount = {};
+                        for (let i = 0; i < data.length; i += 4) {
+                            const alpha = data[i + 3];
+                            if (alpha > 128) { // opaque
+                                const r = data[i], g = data[i + 1], b = data[i + 2];
+                                if (r > 240 && g > 240 && b > 240) continue; // skip white
+                                const key = `${r},${g},${b}`;
+                                colorCount[key] = (colorCount[key] || 0) + 1;
+                            }
+                        }
+                        let maxCount = 0;
+                        let dominantColor = [0, 0, 0];
+                        for (const key in colorCount) {
+                            if (colorCount[key] > maxCount) {
+                                maxCount = colorCount[key];
+                                dominantColor = key.split(',').map(Number);
+                            }
+                        }
+                        const [r, g, b] = dominantColor;
+                        const color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                        this.qrColor.value = color;
+                        this.updateLivePreview();
+                    };
+                    img.src = this.currentLogo;
+                }
+
+                async tintImage(imageSrc, tintColor) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = "anonymous";
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            const ctx = canvas.getContext("2d");
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            ctx.globalCompositeOperation = "color";
+                            ctx.fillStyle = tintColor;
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            resolve(canvas.toDataURL());
+                        };
+                        img.src = imageSrc;
+                    });
+                }
+
+                transformSvg(svgText, style) {
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(svgText, "image/svg+xml");
+                        const rects = Array.from(doc.querySelectorAll("rect"));
+                        if (!rects.length) return svgText;
+
+                        const widths = rects.map(r => parseFloat(r.getAttribute("width") || "0")).filter(w => w > 0);
+                        if (!widths.length) return svgText;
+                        const moduleSize = Math.min(...widths);
+
+                        // Identify background as the largest-area rect and skip it
+                        let backgroundRect = null;
+                        let maxArea = -1;
+                        rects.forEach(r => {
+                            const w = parseFloat(r.getAttribute("width") || "0");
+                            const h = parseFloat(r.getAttribute("height") || "0");
+                            const area = w * h;
+                            if (area > maxArea) {
+                                maxArea = area;
+                                backgroundRect = r;
+                            }
+                        });
+
+                        // Module-sized rects (individual modules)
+                        const moduleRects = rects.filter(r => {
+                            const w = parseFloat(r.getAttribute("width") || "0");
+                            const h = parseFloat(r.getAttribute("height") || "0");
+                            return Math.abs(w - moduleSize) < 0.01 && Math.abs(h - moduleSize) < 0.01;
+                        });
+
+                        // Other rects (exclude background)
+                        const otherRects = rects.filter(r => r !== backgroundRect && !moduleRects.includes(r));
+
+                        const ns = "http://www.w3.org/2000/svg";
+                        const radiusForModule = (size) => Math.min(size * 0.5, size * style.dot * 0.9);
+                        const radiusForEye = (size) => Math.min(size * 0.5, size * style.corner * 0.9);
+
+                        // Convert module-sized rects to rounded module paths
+                        const positions = new Set();
+                        moduleRects.forEach(r => {
+                            const x = parseFloat(r.getAttribute("x") || "0");
+                            const y = parseFloat(r.getAttribute("y") || "0");
+                            positions.add(`${x}|${y}`);
+                        });
+
+                        moduleRects.forEach(r => {
+                            const x = parseFloat(r.getAttribute("x") || "0");
+                            const y = parseFloat(r.getAttribute("y") || "0");
+                            const fill = r.getAttribute("fill") || style.dark || "#000";
+                            const n = {
+                                up: positions.has(`${x}|${(y - moduleSize)}`),
+                                right: positions.has(`${(x + moduleSize)}|${y}`),
+                                down: positions.has(`${x}|${(y + moduleSize)}`),
+                                left: positions.has(`${(x - moduleSize)}|${y}`)
+                            };
+                            const d = roundedModulePath(x, y, moduleSize, radiusForModule(moduleSize), n).trim();
+                            const path = doc.createElementNS(ns, "path");
+                            path.setAttribute("d", d);
+                            path.setAttribute("fill", fill);
+                            if (r.parentNode) r.parentNode.replaceChild(path, r);
+                        });
+
+                        // For other rects: if large (eye-like) set rx/ry; otherwise keep as-is
+                        otherRects.forEach(r => {
+                            const w = parseFloat(r.getAttribute("width") || "0");
+                            const h = parseFloat(r.getAttribute("height") || "0");
+                            // threshold: consider an "eye" any rect >= 3 modules wide/high
+                            if (w >= moduleSize * 3 || h >= moduleSize * 3) {
+                                const rx = radiusForEye(Math.min(w, h));
+                                r.setAttribute("rx", String(rx));
+                                r.setAttribute("ry", String(rx));
+                                if (!r.getAttribute("fill")) r.setAttribute("fill", style.dark || "#000");
+                            }
+                        });
+
+                        const serializer = new XMLSerializer();
+                        return serializer.serializeToString(doc.documentElement);
+                    } catch (e) {
+                        // On any error, return original svg
+                        return svgText;
+                    }
+                }
+
+                createQR(container, data, style) {
+                    const qr = new QRCodeStyling({
+                        width: 260,
+                        height: 260,
+                        type: "svg",
+                        data,
+                        image: this.displayLogo,
+                        imageOptions: { margin: 8 },
+                        dotsOptions: {
+                            type: style.dot > 0.8 ? "extra-rounded" :
+                                style.dot > 0.4 ? "rounded" : "square",
+                            color: style.dark
+                        },
+                        cornersSquareOptions: {
+                            type: style.corner > 0.8 ? "extra-rounded" :
+                                style.corner > 0.4 ? "rounded" : "square",
+                            color: style.dark
+                        },
+                        cornersDotOptions: {
+                            type: style.corner > 0.8 ? "extra-rounded" :
+                                style.corner > 0.4 ? "rounded" : "square",
+                            color: style.dark
+                        },
+                        backgroundOptions: {
+                            color: style.light
+                        }
+                    });
+
+                    // Append initial generated SVG quickly, then replace module <rect>s asynchronously with custom paths
+                    qr.append(container);
+
+                    let modifiedSvg = null;
+
+                    // helper to normalize underlying svg raw value to string
+                    const readUnderlyingSvg = async () => {
+                        try {
+                            const raw = await qr.getRawData("svg");
+                            if (raw instanceof Blob && typeof raw.text === "function") {
+                                return await raw.text();
+                            }
+                            if (typeof raw === "string") return raw;
+                            return "";
+                        } catch {
+                            return "";
+                        }
+                    };
+
+                    // Use normalized string, transform, then set innerHTML
+                    readUnderlyingSvg()
+                        .then(rawText => {
+                            if (!rawText) return;
+                            const transformed = this.transformSvg(rawText, style);
+                            if (transformed) {
+                                modifiedSvg = transformed;
+                                container.innerHTML = transformed;
+                            }
+                        })
+                        .catch(() => {
+                            // ignore and keep original
+                        });
+
+                    // Return a small wrapper that provides getRawData consistent with original API
+                    return {
+                        getRawData: async (type) => {
+                            if (type === "svg") {
+                                if (modifiedSvg) return modifiedSvg;
+                                // fallback to original qr raw data if transform not ready (normalize to string)
+                                try {
+                                    const raw = await qr.getRawData("svg");
+                                    if (raw instanceof Blob && typeof raw.text === "function") {
+                                        return await raw.text();
+                                    }
+                                    if (typeof raw === "string") return raw;
+                                    return modifiedSvg || "";
+                                } catch {
+                                    return modifiedSvg || "";
+                                }
+                            }
+                            // for other types, delegate
+                            if (qr.getRawData) return await qr.getRawData(type);
+                            return "";
+                        },
+                        _underlying: qr
+                    };
+                }
+
+                generate() {
+                    this.output.innerHTML = "";
+                    this.qrItems = [];
+                    this.selectedStyle = null;
+
+                    const lines = this.qrInput.value
+                        .trim().split("\n").filter(Boolean);
+
+                    if (!lines.length) {
+                        alert("Enter at least one value");
+                        return;
+                    }
+
+                    const captionLines = this.captions.value
+                        .trim().split("\n").filter(Boolean);
+
+                    lines.forEach((line, index) => {
+                        const data = this.prefix.value + line + this.suffix.value;
+                        const style = this.getStyle();
+
+                        const col = document.createElement("div");
+                        col.className = "col-md-4 mb-3";
+
+                        const card = document.createElement("div");
+                        card.className = "card";
+
+                        const cardBody = document.createElement("div");
+                        cardBody.className = "card-body text-center";
+
+                        const box = document.createElement("div");
+                        box.className = "qr-variant";
+
+                        const qrBox = document.createElement("div");
+                        qrBox.className = "qr-box";
+                        box.appendChild(qrBox);
+
+                        const label = document.createElement("div");
+                        label.textContent = captionLines[index] || "Preview";
+                        box.appendChild(label);
+
+                        const dataDiv = document.createElement("div");
+                        dataDiv.className = "mt-2 small text-muted";
+                        dataDiv.textContent = data;
+                        box.appendChild(dataDiv);
+
+                        cardBody.appendChild(box);
+                        card.appendChild(cardBody);
+                        col.appendChild(card);
+
+                        // Append to DOM first so QR library can correctly render into the container
+                        this.output.appendChild(col);
+
+                        // Create QR now that container is attached
+                        const qr = this.createQR(qrBox, data, style);
+
+                        box.onclick = () => {
+                            document.querySelectorAll(".qr-variant")
+                                .forEach(v => v.classList.remove("selected"));
+                            box.classList.add("selected");
+                            this.selectedStyle = style;
+                        };
+
+                        this.qrItems.push({ data, style, qr, qrBox });
+                    });
+                }
+
+                applyToAll() {
+                    if (!this.selectedStyle) {
+                        alert("Select a QR first");
+                        return;
+                    }
+
+                    this.qrItems.forEach(item => {
+                        item.qrBox.innerHTML = "";
+                        item.qr = this.createQR(
+                            item.qrBox,
+                            item.data,
+                            this.selectedStyle
+                        );
+                    });
+                }
+
+                async downloadAll() {
+                    if (!this.qrItems.length) {
+                        alert("Generate QRs first");
+                        return;
+                    }
+
+                    const zip = new JSZip();
+                    let i = 1;
+
+                    for (const item of this.qrItems) {
+                        // our wrapper's getRawData returns transformed SVG when available
+                        const svg = await item.qr.getRawData("svg");
+                        zip.file(`qr_${i}.svg`, svg);
+                        i++;
+                    }
+
+                    const blob = await zip.generateAsync({ type: "blob" });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "qr-codes.zip";
+                    a.click();
+                }
+            }
+
+            new QRGeneratorApp();
+        })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
