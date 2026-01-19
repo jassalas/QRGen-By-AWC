@@ -15,13 +15,13 @@
         body {
             font-family: Arial, sans-serif;
             background: #f4f4f4;
-            padding: 20px;
+            padding: 10px;
         }
 
         textarea,
         input,
         button {
-            width: 100%;
+            width: 50%;
             padding: 10px;
             margin: 6px 0;
         }
@@ -75,49 +75,65 @@
 </head>
 
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4">QR Generator – Class Based Pro</h1>
+    <div class="container mt-2">
+        <h1 class="mb-2">QR Generator – Class Based Pro</h1>
         <div class="row">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Controls</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="prefix" class="form-label">Prefix</label>
-                            <input id="prefix" class="form-control" value="https://domain.extension/">
+                <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">Controls</div>
+                        <div class="card-body">
+                            <div class="mb-1">
+                                <label for="prefix" class="form-label">Prefix</label>
+                                <input id="prefix" class="form-control" value="https://domain.extension/">
+                            </div>
+                            <div class="mb-1">
+                                <label for="qr-input" class="form-label">QR Input (one value per line)</label>
+                                <textarea id="qr-input" class="form-control" placeholder="One value per line"></textarea>
+                            </div>
+                            <div class="mb-1">
+                                <label for="captions" class="form-label">Captions (one per QR, optional)</label>
+                                <textarea id="captions" class="form-control" placeholder="One caption per line"></textarea>
+                            </div>
+                            <div class="mb-1">
+                                <label for="suffix" class="form-label">Suffix</label>
+                                <input id="suffix" class="form-control" value=".pdf">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="qr-input" class="form-label">QR Input (one value per line)</label>
-                            <textarea id="qr-input" class="form-control" placeholder="One value per line"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="captions" class="form-label">Captions (one per QR, optional)</label>
-                            <textarea id="captions" class="form-control" placeholder="One caption per line"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="suffix" class="form-label">Suffix</label>
-                            <input id="suffix" class="form-control" value=".pdf">
-                        </div>
-                        <div class="mb-3">
+                    </div>
+                </div>
+                    <div class="col-md-6">
+                        <div class="mb-1">
                             <label for="dotRadius" class="form-label">Dot roundness</label>
-                            <input type="range" id="dotRadius" class="form-range" min="0" max="1" step="0.05" value="0.6">
+                            <input type="range" id="dotRadius" class="form-range" min="0" max="1" step="0.05" value="0.5">
                         </div>
-                        <div class="mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-1">
                             <label for="cornerRadius" class="form-label">Corner roundness</label>
-                            <input type="range" id="cornerRadius" class="form-range" min="0" max="1" step="0.05" value="0.6">
+                            <input type="range" id="cornerRadius" class="form-range" min="0" max="0.25" step="0.05" value="0.1">
                         </div>
-                        <div class="mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-1">
                             <label for="qrColor" class="form-label">QR color</label>
                             <input type="color" id="qrColor" class="form-control form-control-color" value="#000000">
                         </div>
-                        <div class="mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-1">
                             <label for="bgColor" class="form-label">Background color</label>
                             <input type="color" id="bgColor" class="form-control form-control-color" value="#ffffff">
                         </div>
-                        <div class="mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-1">
                             <label for="logoInput" class="form-label">Logo Image</label>
                             <input type="file" id="logoInput" class="form-control" accept="image/*">
                         </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="d-flex gap-2 flex-wrap">
                             <button id="generateBtn" class="btn btn-primary">Generate</button>
                             <button id="applyAllBtn" class="btn btn-secondary">Apply Selected Style To All</button>
@@ -136,7 +152,6 @@
                     </div>
                 </div>
             </div>
-        </div>
         <div id="output" class="mt-4 row">
         </div>
     </div>
