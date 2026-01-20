@@ -80,79 +80,92 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">Controls</div>
-                        <div class="card-body">
-                            <div class="mb-1">
-                                <label for="prefix" class="form-label">Prefix</label>
-                                <input id="prefix" class="form-control" value="https://domain.extension/">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                Controls
                             </div>
-                            <div class="mb-1">
-                                <label for="qr-input" class="form-label">QR Input (one value per line)</label>
-                                <textarea id="qr-input" class="form-control" placeholder="One value per line"></textarea>
-                            </div>
-                            <div class="mb-1">
-                                <label for="captions" class="form-label">Captions (one per QR, optional)</label>
-                                <textarea id="captions" class="form-control" placeholder="One caption per line"></textarea>
-                            </div>
-                            <div class="mb-1">
-                                <label for="suffix" class="form-label">Suffix</label>
-                                <input id="suffix" class="form-control" value=".pdf">
+                            <div class="card-body">
+                                <div class="mb-1">
+                                    <label for="prefix" class="form-label">Prefix</label>
+                                    <input id="prefix" class="form-control" value="https://domain.extension/">
+                                </div>
+                                <div class="mb-1">
+                                    <label for="qr-input" class="form-label">QR Input (one value per line)</label>
+                                    <textarea id="qr-input" class="form-control" placeholder="One value per line"></textarea>
+                                </div>
+                                <div class="mb-1">
+                                    <label for="captions" class="form-label">Captions (one per QR, optional)</label>
+                                    <textarea id="captions" class="form-control" placeholder="One caption per line"></textarea>
+                                </div>
+                                <div class="mb-1">
+                                    <label for="suffix" class="form-label">Suffix</label>
+                                    <input id="suffix" class="form-control" value=".pdf">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                     <div class="col-md-6">
                         <div class="mb-1">
                             <label for="dotRadius" class="form-label">Dot roundness</label>
-                            <input type="range" id="dotRadius" class="form-range" min="0" max="1" step="0.05" value="0.5">
+                            <input type="range" id="dotRadius" class="form-range form-control" min="0" max="1" step="0.05" value="0.5">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-1">
                             <label for="cornerRadius" class="form-label">Corner roundness</label>
-                            <input type="range" id="cornerRadius" class="form-range" min="0" max="0.25" step="0.05" value="0.1">
+                            <input type="range" id="cornerRadius" class="form-range form-control" min="0" max="0.25" step="0.05" value="0.1">
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-1">
-                            <label for="qrColor" class="form-label">QR color</label>
+                        <div class="mb-1 d-inline-flex">
+                            <label for="qrColor" class="form-label pe-2">QR color : </label>
                             <input type="color" id="qrColor" class="form-control form-control-color" value="#000000">
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-1">
-                            <label for="bgColor" class="form-label">Background color</label>
+                        <div class="mb-1 d-inline-flex">
+                            <label for="bgColor" class="form-label pe-2">Background color : </label>
                             <input type="color" id="bgColor" class="form-control form-control-color" value="#ffffff">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-1">
-                            <label for="logoInput" class="form-label">Logo Image</label>
-                            <input type="file" id="logoInput" class="form-control" accept="image/*">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button id="generateBtn" class="btn btn-primary">Generate</button>
-                            <button id="applyAllBtn" class="btn btn-secondary">Apply Selected Style To All</button>
-                            <button id="downloadAllBtn" class="btn btn-success">Bulk Download SVG (ZIP)</button>
-                            <button id="extractColorBtn" class="btn btn-outline-secondary">Set QR Color from Logo</button>
-                            <button id="tintLogoBtn" class="btn btn-outline-secondary">Tint Logo with QR Color</button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Live Preview</div>
-                    <div class="card-body text-center">
-                        <div id="live-preview" class="qr-box d-inline-block"></div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">Live Preview</div>
+                            <div class="card-body text-center">
+                                <div id="live-preview" class="qr-box d-inline-block"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-1">
+                            <label for="logoInput" class="form-label">Logo Image</label>
+                            <input type="file" id="logoInput" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="col-3">
+                            <button id="extractColorBtn" class="btn btn-outline-secondary w-100">Set QR Color from Logo</button>
+                    </div>
+                    <div class="col-3">
+                            <button id="tintLogoBtn" class="btn btn-outline-secondary w-100">Tint Logo with QR Color</button>
+                    </div>
+                    <div class="col-4">
+                            <button id="generateBtn" class="btn btn-primary w-100">Generate</button>
+                    </div>
+                    <div class="col-4">
+                            <button id="applyAllBtn" class="btn btn-secondary w-100">Apply Selected Style To All</button>
+                    </div>
+                    <div class="col-4">
+                            <button id="downloadAllBtn" class="btn btn-success w-100">Bulk Download SVG (ZIP)</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        <div id="output" class="mt-4 row">
+            <div id="output" class="mt-4 row">
         </div>
     </div>
 
